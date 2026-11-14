@@ -1,12 +1,15 @@
 [package]
-name = "Final_Project"
+name = "ny-housing-graph"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.76"
+description = "Explore New York housing price-range overlaps with two Dijkstra implementations"
+license = "MIT"
+repository = "https://github.com/Cx233x/New-York-Housing-Market-Analysis"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# Keep this standalone project independent of manifests in ancestor directories.
+[workspace]
 
 [dependencies]
 csv = "1.1"
 serde = { version = "1.0", features = ["derive"] }
-serde_derive = "1.0"
-itertools = "0.10"
