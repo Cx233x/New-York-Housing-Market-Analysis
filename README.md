@@ -1,10 +1,10 @@
-# 🏙️ New York Housing Market Analysis
+# New York Housing Market Analysis
 
 A graph-based analysis program written in **Rust** that explores the relationship between property types and their prices in the New York housing market.
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 **Source:** [New York Housing Market — Kaggle](https://www.kaggle.com/datasets/nelgiriyewithana/new-york-housing-market/data)
 
@@ -12,13 +12,13 @@ The dataset includes information on various types of properties such as multi-fa
 
 ---
 
-## 📖 Introduction
+## Introduction
 
 This project analyzes the New York housing market using graph-based techniques. By treating property types as nodes and prices as edge weights, the program computes statistical measures — including degree distribution, mean, variance, standard deviation, and edge weight analysis — to uncover pricing dynamics and connectivity patterns across different property categories.
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 > Make sure **Rust** and **Cargo** are installed on your system. You can install them at [rustup.rs](https://rustup.rs).
 
@@ -39,7 +39,7 @@ cargo test
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 ### `main.rs`
 - Entry point of the program
@@ -63,7 +63,7 @@ cargo test
 
 ---
 
-## 🖥️ Program Outputs
+## Program Outputs
 
 ### Degree Distribution
 Measures how many connections each property type has.
@@ -100,7 +100,7 @@ Outputs the full price range for each individual property type.
 
 ---
 
-## 🧪 Tests
+## Tests
 
 Run the test suite with:
 ```bash
@@ -111,7 +111,7 @@ The `main.rs` file contains 3 built-in test functions to validate core functiona
 
 ---
 
-## 📝 Conclusion
+## Conclusion
 
 The analysis reveals a **diverse real estate market** where property type significantly influences price:
 
@@ -121,14 +121,14 @@ The analysis reveals a **diverse real estate market** where property type signif
 
 ---
 
-## 🛠️ Built With
+## Built With
 
 - [Rust](https://www.rust-lang.org/) — Systems programming language
 - [Cargo](https://doc.rust-lang.org/cargo/) — Rust package manager and build system
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 ├── src/
