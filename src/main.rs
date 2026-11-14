@@ -8,8 +8,12 @@ use graph::dijkstra;
 use std::collections::HashMap;
 
 fn main() {
-    let file_path = "/Users/xingyijia/Final_Project/src/NY-House-Dataset.csv";
-    let graph = parse_csv(file_path).expect("Failed to parse CSV file");
+    let file_path = concat!(
+        env!("CARGO_MANIFEST_DIR"), 
+        "/src/NY-House-Dataset.csv"
+    );
+    let graph = parse_csv(file_path)
+        .expect("Failed to parse CSV file");
 
     // Degree Centrality
     let degrees = degree_distribution(&graph);
