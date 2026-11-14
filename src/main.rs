@@ -3,7 +3,16 @@ mod calculation;
 mod graph;
 
 use parser::parse_csv;
-use calculation::{degree_distribution, mean, variance, standard_deviation, mode, edge_weight_analysis, shortest_path, price_distribution, pricing_differences};
+use calculation::{
+    degree_distribution, 
+    mean, 
+    variance, 
+    standard_deviation, 
+    mode, 
+    edge_weight_analysis, 
+    price_distribution, 
+    pricing_differences
+};
 use graph::dijkstra;
 use std::collections::HashMap;
 
@@ -31,7 +40,7 @@ fn main() {
     // Shortest Path Analysis
     let node1 = "Condo";
     let node2 = "Co-op";
-    if let Some(distance) = shortest_path(&graph, node1, node2) {
+    if let Some(distance) = dijkstra(&graph, node1, node2) {
         println!("Shortest Path between {} and {} is {}", node1, node2, distance);
     } else {
         println!("No path between {} and {}", node1, node2);
@@ -68,10 +77,10 @@ mod tests {
     #[test]
     fn test_shortest_path() {
     let graph = HashMap::from([("Node1".to_string(), HashMap::from([("Node2".to_string(), 10)]))]);
-    let distance = shortest_path(&graph, "Node1", "Node3");
+    let distance = dijkstra(&graph, "Node1", "Node3");
     assert_eq!(distance, None); 
 
-    let distance = shortest_path(&graph, "Node1", "Node2");
+    let distance = dijkstra(&graph, "Node1", "Node2");
     assert_eq!(distance, Some(10));  
 
     let graph = HashMap::from([
@@ -80,7 +89,7 @@ mod tests {
         ("Node3".to_string(), HashMap::from([("Node4".to_string(), 3)])),
         ("Node4".to_string(), HashMap::new())
     ]);
-    let distance = shortest_path(&graph, "Node1", "Node4");
+    let distance = dijkstra(&graph, "Node1", "Node4");
     assert_eq!(distance, Some(5));  // Shortest path from Node1 to Node4 is through Node3
 }
 
