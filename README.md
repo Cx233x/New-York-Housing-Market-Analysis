@@ -119,7 +119,6 @@ cargo run
 
 The program prints graph statistics, edge weight analysis, shortest-path results, and price-range summaries in the terminal.
 
-**Important:** Before running the current version, update the hard-coded CSV path in `src/main.rs` to reference the dataset included in the repository.
 
 ### Step 3: Run Tests
 
