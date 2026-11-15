@@ -14,7 +14,7 @@ const HELP: &str = "New York housing price-range graph analysis
 Usage: ny-housing-graph [OPTIONS]
 
 Options:
-  --data PATH        CSV file (default: bundled src/NY-House-Dataset.csv)
+  --data PATH        CSV file (default: bundled data/NY-House-Dataset.csv; download separately)
   --start TYPE       Start category (default: Condo for sale)
   --end TYPE         Destination category (default: Co-op for sale)
   --algorithm NAME   heap, scan, or both (default: both)
@@ -23,7 +23,7 @@ Options:
   -h, --help         Print help
 
 Example:
-  cargo run --release -- --start \"Condo for sale\" --end \"Co-op for sale\" --algorithm both --repeat 1000
+  cargo run --release -- --data data/NY-House-Dataset.csv --list-types
 
 Costs are cumulative price-range overlap widths, not travel distances or similarity scores.";
 
@@ -47,7 +47,7 @@ struct Options {
 impl Options {
     fn parse(args: impl IntoIterator<Item = String>) -> Result<Option<Self>, String> {
         let mut options = Self {
-            data: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/NY-House-Dataset.csv"),
+            data: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/NY-House-Dataset.csv"),
             start: "Condo for sale".into(),
             end: "Co-op for sale".into(),
             algorithm: Algorithm::Both,

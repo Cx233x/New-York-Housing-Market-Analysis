@@ -1,54 +1,136 @@
-# Dataset provenance and licensing
+# Dataset Provenance and Licensing
 
-The repository's MIT license applies to the project code and project-authored
-documentation. It does **not** relicense `src/NY-House-Dataset.csv` or grant rights
-to third-party data.
+This document describes the origin, usage, historical snapshot, and redistribution status of the dataset used in this project.
 
-## Source
+## 1. Data Source
 
-- Title: **New York Housing Market**
-- Publisher: **Nidula Elgiriyewithana** (`nelgiriyewithana`)
-- Dataset: https://www.kaggle.com/datasets/nelgiriyewithana/new-york-housing-market
-- Official metadata: https://www.kaggle.com/api/v1/datasets/view/nelgiriyewithana/new-york-housing-market
-- Upstream version reported by the metadata: **1**, last updated **2024-01-06**.
-- Metadata checked: **2026-11-14**.
+- **Dataset:** New York Housing Market
+- **Publisher:** Nidula Elgiriyewithana (`nelgiriyewithana`)
+- **Platform:** Kaggle
+- **Source:** https://www.kaggle.com/datasets/nelgiriyewithana/new-york-housing-market
+- **Metadata:** https://www.kaggle.com/api/v1/datasets/view/nelgiriyewithana/new-york-housing-market
 
-The historical download date and exact upstream version of the local CSV were
-not recorded. The metadata above describes the upstream dataset; it does not
-establish that the bundled file is byte-identical to that version.
+As checked on November 14, 2026, the upstream metadata reported:
 
-## Redistribution status: not confirmed
+- Dataset version: 1
+- Last updated: January 6, 2024
+- License label: Other (specified in description)
 
-The official metadata currently labels the license **“Other (specified in
-description)”**. The retrieved description lists fields and potential uses but
-provides no explicit redistribution grant or concrete license terms. Public
-availability on Kaggle does not establish permission to redistribute this CSV.
+The original local download date and exact dataset version were not recorded. The upstream metadata does not establish that the historical local CSV is byte-identical to the listed upstream version.
 
-The existing CSV has been retained locally without alteration for reproducibility;
-this notice is not a substitute for permission. Before publishing a repository,
-release, or package containing the CSV:
+## 2. Redistribution Status
 
-1. Obtain and retain explicit applicable terms or permission from the data owner.
-2. Follow any attribution, notice, commercial-use, or redistribution conditions
-   specified in those terms. These conditions have not yet been established.
-3. If permission cannot be established, distribute the code without the CSV and
-   direct users to obtain data from the source under its applicable terms.
-   Removing a tracked file from the working tree alone does not remove it from
-   Git history or previously created releases.
+**The original Kaggle dataset is not included in this repository.**
 
-No permission request has been sent to the publisher by this project update.
+The retrieved Kaggle metadata and description did not establish an explicit redistribution grant.
 
-## Local snapshot
+Public availability on Kaggle does not automatically permit redistribution.
 
-- Path: `src/NY-House-Dataset.csv`
-- Rows excluding header: **4,801**
-- Columns: **17**; the program reads `TYPE` and `PRICE`.
-- Exact duplicate rows beyond their first occurrence: **214**.
-- SHA-256: `87a3bd9b534a707ff4b3badf5a3c8d7e144d725efb7abbf0d7d1af3b896a57c1`
+Accordingly:
 
-The application does not deduplicate or remove outliers. Duplicate rows do not
-change per-category minimum/maximum ranges. They would affect listing counts and
-listing-level distributions if those features were added. A house price of
-`2,147,483,647` warrants investigation. `TYPE` mixes housing types and listing
-statuses. The snapshot should not be described as current market data or completed
-transaction data.
+- The repository distributes source code, tests, and project documentation, but not the original CSV.
+- Users must obtain the dataset directly from Kaggle under its applicable terms.
+- The repository's MIT license does not apply to third-party datasets.
+- No permission request has been sent to the original publisher as part of this project update.
+
+Removing the file from the current Git tree does not necessarily remove copies from earlier commits, forks, or releases.
+
+## 3. Local Dataset Setup
+
+Download the dataset from the Kaggle source above.
+
+Create a directory named `data` in the repository root and place the CSV at:
+
+```text
+data/NY-House-Dataset.csv
+```
+
+Run the application:
+
+```bash
+cargo run --locked --release -- \
+  --data data/NY-House-Dataset.csv
+```
+
+The `data/NY-House-Dataset.csv` path is excluded from Git tracking by `.gitignore`.
+
+For a demonstration that does not require the original dataset, use:
+
+```bash
+cargo run --locked -- \
+  --data tests/fixtures/categories.csv \
+  --start A --end B
+```
+
+## 4. Required Schema
+
+The application reads two columns:
+
+| Column | Description |
+|---|---|
+| `TYPE` | Housing or listing category |
+| `PRICE` | Nonnegative integer listing price |
+
+Additional columns are ignored.
+
+The parser trims whitespace, skips empty prices, and rejects malformed prices, missing required columns, and empty category names.
+
+Categories without valid prices are excluded.
+
+## 5. Historical Local Snapshot
+
+The following information describes the original dataset snapshot used in the project. The snapshot is no longer committed to the repository.
+
+| Property | Historical value |
+|---|---|
+| CSV rows (excluding header) | 4,801 |
+| Columns | 17 |
+| Exact duplicate rows beyond first occurrences | 214 |
+| Graph categories | 13 |
+
+**Historical SHA-256 checksum:**
+
+```text
+87a3bd9b534a707ff4b3badf5a3c8d7e144d725efb7abbf0d7d1af3b896a57c1
+```
+
+The checksum is provided to help identify the historical snapshot. It does not imply that the latest upstream dataset is identical.
+
+## 6. Data Quality and Limitations
+
+Several characteristics affect how the dataset should be interpreted:
+
+- The `TYPE` field mixes property types and listing statuses.
+- Exact duplicate rows exist in the historical snapshot.
+- A recorded house price of $2,147,483,647 warrants further investigation.
+- The current graph construction uses category-level minimum and maximum prices, making it sensitive to outliers.
+- Duplicate records do not change the current category price ranges, but would affect listing-level statistics.
+- The project does not perform outlier removal or deduplication.
+- The historical snapshot is not necessarily representative of current market conditions.
+- Listing prices should not be interpreted as completed transaction prices.
+
+The project is intended for algorithmic and descriptive analysis, not property valuation, investment recommendations, or causal inference.
+
+## 7. Testing Without the Dataset
+
+Synthetic test data is available at:
+
+```text
+tests/fixtures/categories.csv
+```
+
+All automated tests are designed to run without the original Kaggle CSV.
+
+```bash
+cargo test --locked
+```
+
+The sample fixture exists solely for reproducible testing and demonstration.
+
+## 8. License
+
+The repository's MIT license applies to project code and project-authored documentation.
+
+The original Kaggle dataset retains its own applicable terms and is not relicensed by this repository.
+
+For project usage instructions, see [README.md](README.md).

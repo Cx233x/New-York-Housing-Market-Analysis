@@ -92,27 +92,46 @@ mod tests {
     }
 
     #[test]
-    fn bundled_dataset_matches_documented_graph() {
-        let graph = build_graph(include_bytes!("NY-House-Dataset.csv").as_slice()).unwrap();
-        assert_eq!(graph.len(), 13);
-        assert_eq!(graph.values().map(HashMap::len).sum::<usize>(), 154);
-        assert_eq!(graph["Townhouse for sale"]["House for sale"], 64_685_000);
-        assert_eq!(graph["Coming Soon"]["Foreclosure"], 1_046_000);
+    fn fixture_graph_matches_expected_properties() {
+        let csv = include_str!("../tests/fixtures/categories.csv");
+        let graph = build_graph(csv.as_bytes()).unwrap();
+
+        // The fixture contains three categories.
+        assert_eq!(graph.len(), 3);
+
+        // A: [1, 5], B: [3, 7], C: [100, 100].
+        // A and B overlap by 2; C is isolated.
+        assert_eq!(graph["A"]["B"], 2);
+        assert_eq!(graph["B"]["A"], 2);
+        assert!(graph["C"].is_empty());
+
+        // There is one undirected edge.
+        assert_eq!(graph.values().map(HashMap::len).sum::<usize>(), 2);
+
+        // Both algorithms must agree on every ordered pair.
         let names: Vec<_> = graph.keys().collect();
-        for a in &names {
-            for b in &names {
-                let heap = crate::graph::dijkstra_heap(&graph, a, b).unwrap();
-                let scan = crate::graph::dijkstra_linear_scan(&graph, a, b).unwrap();
+
+        for start in &names {
+            for end in &names {
+                let heap = crate::graph::dijkstra_heap(&graph, start, end).unwrap();
+
+                let scan = crate::graph::dijkstra_linear_scan(&graph, start, end).unwrap();
+
                 assert_eq!(heap.as_ref().map(|p| p.cost), scan.as_ref().map(|p| p.cost));
             }
         }
-        let path = crate::graph::dijkstra_heap(&graph, "Condo for sale", "Co-op for sale")
+
+        // Verify a known shortest path.
+        let path = crate::graph::dijkstra_heap(&graph, "A", "B")
             .unwrap()
             .unwrap();
-        assert_eq!(path.cost, 0);
-        assert_eq!(
-            path.nodes,
-            vec!["Condo for sale", "Mobile house for sale", "Co-op for sale"]
-        );
+
+        assert_eq!(path.cost, 2);
+        assert_eq!(path.nodes, vec!["A", "B"]);
+
+        // C must be unreachable from A.
+        assert!(crate::graph::dijkstra_heap(&graph, "A", "C")
+            .unwrap()
+            .is_none());
     }
 }

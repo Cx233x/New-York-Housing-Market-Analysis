@@ -1,170 +1,181 @@
 # New York Housing Market Analysis
 
-**Rust · Graph modeling · Two Dijkstra implementations**
+**Rust | Graph Modeling | Dijkstra's Algorithm | Data Analysis**
 
-A command-line project that turns New York housing listing categories into an
-undirected graph using overlapping price ranges. It reports connectivity and
-edge-weight statistics, displays minimum-cost routes, and compares a binary-heap
-Dijkstra implementation with a linear-scan implementation.
+A Rust-based command-line project exploring price-range relationships across New York housing listing categories through graph construction, descriptive statistics, and shortest-path algorithms.
 
-Originally developed for **DS210: Programming for Data Science at Boston University**.
-The [original project writeup](doc/DS210%20Final%20project%20Writeup.pdf) is a historical
-reference; the definitions and behavior below describe the current implementation.
+Originally developed for **DS210: Programming for Data Science at Boston University**, the project has been reorganized into a reproducible, tested Rust application.
 
-## Getting started
+## Project Overview
 
-Requires Rust **1.76 or later** and Cargo. Install them from [rustup.rs](https://rustup.rs/).
+This project converts housing listing categories into an undirected weighted graph based on overlapping price ranges.
+
+It focuses on:
+
+- Constructing a graph from housing listing data.
+- Analyzing connectivity and edge-weight distributions.
+- Comparing binary-heap and linear-scan implementations of Dijkstra's algorithm.
+- Exploring how graph definitions affect the interpretation of housing market relationships.
+
+The project models price-range overlap rather than geographic proximity, transaction costs, or causal relationships.
+
+## Getting Started
+
+### Prerequisites
+
+- Rust 1.76 or later
+- Cargo
+
+Install Rust through [rustup](https://rustup.rs/).
+
+### Installation
 
 ```bash
-git clone https://github.com/Cx233x/New-York-Housing-Market-Analysis.git
-cd New-York-Housing-Market-Analysis
-cargo run --locked --release
+git clone https://github.com/Cx233x/nyc-housing-market-analysis.git
+cd nyc-housing-market-analysis
+
+cargo build --locked
 ```
 
-The default query compares both algorithms from `Condo for sale` to `Co-op for sale`.
-The program prints sorted category and edge tables, a timing table, and the full
-route returned by each implementation.
+### Run with Sample Data
+
+A small synthetic dataset is provided for testing and demonstration. No external download is needed.
 
 ```bash
-# Discover valid category names.
-cargo run --locked -- --list-types
+cargo run --locked -- \
+  --data tests/fixtures/categories.csv \
+  --start A \
+  --end B \
+  --algorithm both
+```
 
-# Compare both implementations using repeated queries.
+The fixture contains three categories, A, B, and C.
+
+- A and B have an overlapping price interval of width 2.
+- C is an isolated node.
+- Both Dijkstra implementations should return a minimum cost of 2 for A to B.
+
+### Run with the Original Housing Dataset
+
+The original third-party Kaggle dataset is **not included** in this repository because its redistribution permissions have not been confirmed.
+
+1. Download [New York Housing Market](https://www.kaggle.com/datasets/nelgiriyewithana/new-york-housing-market) from Kaggle under the applicable terms.
+2. Create a `data/` directory in the repository root.
+3. Place the extracted CSV at `data/NY-House-Dataset.csv`.
+
+Run the analysis:
+
+```bash
 cargo run --locked --release -- \
-  --data src/NY-House-Dataset.csv \
+  --data data/NY-House-Dataset.csv \
   --start "Condo for sale" \
   --end "Co-op for sale" \
   --algorithm both \
   --repeat 1000
-
-# Select one implementation.
-cargo run --locked --release -- --algorithm scan
-
-# Show all options.
-cargo run --locked -- --help
 ```
 
-| Option | Default | Meaning |
+List available categories:
+
+```bash
+cargo run --locked -- --list-types
+```
+
+The original category names above may need to be adjusted if the upstream dataset has changed.
+
+See [DATASET.md](DATASET.md) for provenance, schema requirements, and historical snapshot information.
+
+## Command-Line Options
+
+| Option | Default | Description |
 |---|---|---|
-| `--data PATH` | Bundled `src/NY-House-Dataset.csv` | CSV path; an explicit relative path is relative to the working directory |
-| `--start TYPE` | `Condo for sale` | Exact category name after whitespace trimming |
-| `--end TYPE` | `Co-op for sale` | Exact destination category name |
+| `--data PATH` | `data/NY-House-Dataset.csv` | Input CSV path |
+| `--start TYPE` | `Condo for sale` | Starting category |
+| `--end TYPE` | `Co-op for sale` | Destination category |
 | `--algorithm NAME` | `both` | `heap`, `scan`, or `both` |
-| `--repeat N` | `1` | Positive number of timed queries per implementation |
-| `--list-types` | Off | Print sorted category names and exit |
-| `-h`, `--help` | — | Print usage and exit |
+| `--repeat N` | `1` | Number of timed queries |
+| `--list-types` | Off | Display available categories |
+| `--help` | — | Show CLI instructions |
 
-Unknown categories, invalid options, malformed prices, missing columns, and files
-without usable prices produce an error and a nonzero exit status. Known but
-disconnected categories produce an `unreachable` result. Custom CSV files must
-contain `TYPE` and `PRICE` headers; other columns are ignored. Prices must be
-nonnegative integers fitting in `u64`. Empty prices are skipped, whitespace is
-trimmed, and empty category names are rejected. A category with no valid prices
-is excluded; a category with valid prices but no edges is retained.
+The CSV must include `TYPE` and `PRICE` columns. Prices must be nonnegative integers; empty prices are skipped.
 
-## Graph definition
+## Graph Construction
 
-For each category `T`, collect its minimum and maximum observed listing prices:
+For each housing category, the program calculates the minimum and maximum observed listing prices.
+
+Each category becomes a graph node. Two different categories are connected when their closed price intervals overlap or touch.
+
+The weight of an edge is the width of their shared price interval:
 
 ```text
-range(T) = [min_price(T), max_price(T)]
+weight(A, B) =
+    min(max_price(A), max_price(B))
+  - max(min_price(A), min_price(B))
 ```
 
-- **Nodes:** Distinct `TYPE` values with at least one valid price.
-- **Edges:** A pair of different categories whose closed price intervals overlap
-  or touch. There are no self-loops. Both directions are stored internally.
-- **Weight:** Width of the shared interval in USD:
+An edge exists only if the intervals intersect.
 
-```text
-weight(A, B) = min(max_price(A), max_price(B))
-             - max(min_price(A), min_price(B))
-```
+The resulting graph is undirected and contains nonnegative weights. Touching intervals may create zero-weight edges.
 
-This formula is used only when the intervals overlap or touch. Touching intervals
-and overlapping single-price ranges produce zero-weight edges.
+A shortest path minimizes the sum of overlap widths. It should not be interpreted as the most similar sequence of property types: larger overlaps may indicate stronger price-range relationships, but Dijkstra minimizes the assigned weights.
 
-A path's cost is the **sum of its overlap widths**. A minimum-cost route therefore
-minimizes cumulative overlap width. It is not a geographic route, a transaction
-price, a transition budget, or a measure of maximum housing similarity. In
-particular, larger overlaps can indicate stronger price-range relationships while
-the shortest-path objective favors smaller weights.
+## Historical Dataset Results
 
-This update preserves the original model to make its behavior inspectable.
-Changing to normalized similarity costs or percentile-based ranges would be a
-separate modeling experiment with different interpretations and results.
+The following results were recorded from the original local dataset snapshot. The CSV is no longer distributed with this repository, and results may differ with other dataset versions.
 
-## Verified results for the bundled snapshot
-
-| Metric | Value |
+| Metric | Result |
 |---|---:|
-| CSV rows, excluding header | 4,801 |
-| Categories | 13 |
-| Unique undirected edges | 77 of 78 possible |
+| Listings (CSV rows) | 4,801 |
+| Housing/listing categories | 13 |
+| Unique undirected edges | 77 |
 | Mean degree | 11.846154 |
 | Population degree variance | 0.130178 |
 | Degree standard deviation | 0.360801 |
 | Degree mode | 12 |
 | Zero-weight undirected edges | 11 |
-| House for sale ↔ Townhouse for sale overlap | $64,685,000 |
-| Coming Soon ↔ Foreclosure overlap | $1,046,000 |
 
-Both algorithms return this route for the default query:
+Selected edge-weight observations:
+
+- House for sale and Townhouse for sale: $64,685,000 overlap width.
+- Coming Soon and Foreclosure: $1,046,000 overlap width.
+
+For the historical snapshot, both algorithms found the following minimum-cost route:
 
 ```text
-Condo for sale -> Mobile house for sale -> Co-op for sale
-Cost: 0
+Condo for sale
+    -> Mobile house for sale
+    -> Co-op for sale
+
+Cumulative overlap width: 0
 ```
 
-`Mobile house for sale` has one listing at $1,288,000. Its interval has zero width,
-so overlapping categories can be connected through zero-cost edges. This result
-illustrates a limitation of the weight definition, not a failure of Dijkstra.
+The zero-cost route occurs because a single-listing category creates a price interval of zero width. This illustrates a modeling limitation rather than a shortest-path algorithm error.
 
-Statistics labeled **overlap width** summarize graph weights, not individual
-listing prices. Overall edge statistics count each undirected edge once.
-Per-category minimum/mean/maximum overlap statistics summarize incident edges;
-isolated nodes display `N/A`. Output rows and modes are sorted.
+## Algorithm Comparison
 
-## Algorithm comparison
+Two implementations of Dijkstra's algorithm are provided:
 
-Both implementations solve the same nonnegative-weight shortest-path problem:
-
-| Implementation | Frontier selection | Expected scaling for simple graphs* |
+| Algorithm | Frontier selection | Conventional complexity |
 |---|---|---|
-| `dijkstra_heap` | Binary heap with lazy distance updates | `O((V + E) log V)` |
-| `dijkstra_linear_scan` | Scan the frontier for the smallest distance | `O(V² + E)` |
+| Binary-heap Dijkstra | Priority queue | O((V + E) log V) |
+| Linear-scan Dijkstra | Linear search | O(V² + E) |
 
-*These conventional bounds assume constant-size vertex identifiers and expected
-constant-time hash access. This project stores and clones category strings, which
-also contributes overhead. The heap implementation skips stale entries.
+Both return minimum path costs and reconstructed routes.
 
-Both return a cost and the ordered route. Equal frontier costs are resolved by
-category name. Equal-cost alternative routes are valid; correctness comparisons
-use minimum cost and reachability rather than requiring identical routes.
-Distance arithmetic is checked, and an examined sum exceeding `u64::MAX` is an
-explicit error. A distance exactly equal to `u64::MAX` remains representable.
+The application compares their costs and reachability when `--algorithm both` is selected. Equal-cost paths do not necessarily have identical intermediate nodes.
 
-With `--algorithm both`, the program checks cost/reachability agreement and exits
-with an error if they differ. Agreement between two implementations is not an
-independent proof of correctness; tests also use known answers and a separate
-Floyd–Warshall reference on small generated graphs.
+### Timing Methodology
 
-### Timing interpretation
+The `--repeat N` option performs one untimed warm-up followed by N timed queries per algorithm.
 
-`--repeat N` performs one untimed warm-up followed by `N` queries per algorithm.
-The displayed mean is elapsed nanoseconds divided by `N`. CSV loading, graph
-construction, statistics, and terminal output are excluded. Search allocations,
-route reconstruction, and loop overhead are included. The heap implementation
-runs first when comparing both.
+CSV loading, graph construction, and output formatting are excluded from the measured intervals.
 
-These are exploratory local timings, not published benchmark claims. Use release
-builds, repeat the whole command, and record your CPU, Rust version, graph size,
-query, and repetition count. The real graph has only 13 nodes; overhead can dominate
-and the scan implementation may be faster. A scaling study should add seeded
-synthetic graphs across sizes and sparse/dense connectivity, varied query pairs,
-and varied execution order. Runtime comparisons on those larger graphs have not
-yet been performed.
+These measurements are exploratory. The historical graph contains only 13 nodes, so timing overhead may outweigh asymptotic differences. No general performance superiority is claimed without larger, controlled benchmarks.
 
-## Validation and continuous integration
+## Testing and Validation
+
+The project includes unit tests, CLI integration tests, and GitHub Actions checks.
+
+Run locally:
 
 ```bash
 cargo fmt --all --check
@@ -172,52 +183,65 @@ cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked
 ```
 
-GitHub Actions runs these checks on pushes and pull requests using stable Rust.
-Tests cover both algorithms, route costs, cheaper indirect routes, unreachable and
-unknown nodes, equal-cost alternatives, zero-weight cycles, overflow, CSV schema
-and parsing, isolated categories, and statistical edge cases. They also compare
-both implementations against Floyd–Warshall on fixed-seed small graphs and against
-each other for all **169 ordered category pairs** in the bundled graph.
+Tests cover:
 
-## Data limitations
+- CSV parsing and schema validation
+- Graph construction and edge cases
+- Known shortest-path results
+- Unreachable and unknown categories
+- Zero-weight edges and overflow handling
+- Agreement between Dijkstra implementations
+- Comparison with Floyd-Warshall on small generated graphs
+- CLI argument parsing and execution
 
-- Minimum/maximum ranges are sensitive to outliers and do not describe the full
-  listing-price distribution. The graph is almost complete, limiting how much its
-  connectivity alone can explain.
-- `TYPE` mixes property types with listing statuses such as `Pending`, `Contingent`,
-  and `Coming Soon`.
-- The CSV contains **214 exact duplicate rows beyond their first occurrence**.
-  Duplicates do not affect the current range-based graph but would affect
-  listing-level statistics.
-- A house price of **$2,147,483,647** needs investigation; no outlier removal or
-  deduplication is performed.
-- Single-listing categories create degenerate ranges and may yield zero-cost
-  routes. The model is descriptive and does not support causal or investment claims.
-- The bundled snapshot is historical; its original download date was not recorded.
+Automated tests use synthetic fixtures and do not require the original Kaggle dataset.
 
-## License and dataset rights
+## Data and Modeling Limitations
 
-Project code and project-authored documentation use the [MIT License](LICENSE).
-The third-party CSV is **not** covered by that license.
+- Per-category minimum and maximum prices are sensitive to outliers.
+- Listing categories mix property types and market statuses.
+- Highly overlapping intervals produce a nearly complete graph.
+- Zero-width intervals may create zero-cost paths.
+- Duplicate listings do not affect minimum/maximum ranges, but would affect listing-level summaries.
+- Shortest paths in the constructed graph do not represent geographic routes, market transitions, or investment recommendations.
+- Historical findings should not be interpreted as current NYC housing market conditions.
 
-Source: [New York Housing Market by Nidula Elgiriyewithana on Kaggle](https://www.kaggle.com/datasets/nelgiriyewithana/new-york-housing-market).
-The official metadata labels its license “Other (specified in description)”; clear
-redistribution terms were not found in the retrieved description. **Permission to
-redistribute the bundled CSV has not been confirmed.** Resolve this before publicly
-publishing a repository or release containing the data. See [DATASET.md](DATASET.md)
-for provenance, the snapshot checksum, and the publication options.
-
-## Project structure
+## Project Structure
 
 ```text
-.github/workflows/ci.yml       Formatting, Clippy, and tests
-src/main.rs                   CLI, sorted tables, and exploratory timings
-src/graph.rs                  Heap and linear-scan Dijkstra, route reconstruction
-src/parser.rs                 CSV validation and overlap graph construction
-src/calculation.rs            Degree and undirected overlap-weight statistics
-src/NY-House-Dataset.csv      Third-party dataset; see DATASET.md
-doc/                          Original course project writeup
-Cargo.toml / Cargo.lock        Package metadata and locked dependencies
-LICENSE                       MIT license for project code
-DATASET.md                    Data provenance and unresolved redistribution terms
+nyc-housing-market-analysis/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── docs/
+│   └── project-report.pdf
+├── src/
+│   ├── calculation.rs
+│   ├── graph.rs
+│   ├── main.rs
+│   └── parser.rs
+├── tests/
+│   ├── fixtures/
+│   │   └── categories.csv
+│   └── cli.rs
+├── .gitignore
+├── Cargo.lock
+├── Cargo.toml
+├── DATASET.md
+├── LICENSE
+└── README.md
 ```
+
+The optional `data/` directory is created locally by users and holds the untracked housing dataset.
+
+## Documentation
+
+The [original course project writeup](docs/DS210%20Final%20project%20Writeup.pdf) is retained as a historical reference. The current source code and README define the maintained implementation.
+
+## License and Data Attribution
+
+Project code and project-authored documentation are released under the [MIT License](LICENSE).
+
+The original housing dataset was published on Kaggle by Nidula Elgiriyewithana. The dataset is not covered by this repository's MIT license and is not redistributed here.
+
+See [DATASET.md](DATASET.md) for details.

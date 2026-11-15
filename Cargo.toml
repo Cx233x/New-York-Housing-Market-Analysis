@@ -5,11 +5,11 @@ edition = "2021"
 rust-version = "1.76"
 description = "Explore New York housing price-range overlaps with two Dijkstra implementations"
 license = "MIT"
-repository = "https://github.com/Cx233x/New-York-Housing-Market-Analysis"
+repository = "https://github.com/Cx233x/nyc-housing-market-analysis"
 
 # Keep this standalone project independent of manifests in ancestor directories.
 [workspace]
 
 [dependencies]
-csv = "1.1"
 serde = { version = "1.0", features = ["derive"] }
+csv = "1.3"
