@@ -14,7 +14,7 @@ const HELP: &str = "New York housing price-range graph analysis
 Usage: ny-housing-graph [OPTIONS]
 
 Options:
-  --data PATH        CSV file (default: bundled data/NY-House-Dataset.csv; download separately)
+  --data PATH        CSV file (default: data/NY-House-Dataset.csv; download separately)
   --start TYPE       Start category (default: Condo for sale)
   --end TYPE         Destination category (default: Co-op for sale)
   --algorithm NAME   heap, scan, or both (default: both)

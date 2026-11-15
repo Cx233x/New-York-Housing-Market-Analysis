@@ -236,7 +236,7 @@ The optional `data/` directory is created locally by users and holds the untrack
 
 ## Documentation
 
-The [original course project writeup](docs/DS210%20Final%20project%20Writeup.pdf) is retained as a historical reference. The current source code and README define the maintained implementation.
+The [original course project writeup](docs/project-report.pdf) is retained as a historical reference. The current source code and README define the maintained implementation.
 
 ## License and Data Attribution
 
